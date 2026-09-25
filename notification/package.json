@@ -1,0 +1,23 @@
+{
+  "name": "lycaxia-notification",
+  "version": "1.0.6",
+  "main": "module.js",
+  "type": "module",
+  "keywords": [
+    "notification",
+    "toast",
+    "popup",
+    "log",
+    "react",
+    "modern",
+    "library",
+    "javascript",
+    "ui"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Lycaxia - Rifaldo Saputra",
+  "license": "MIT",
+  "description": "Modern notification library for JavaScript"
+}

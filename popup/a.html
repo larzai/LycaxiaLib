@@ -1,0 +1,608 @@
+const isBrowser = typeof window !== "undefined";
+
+let soundUrl = "";
+
+if (isBrowser) {
+  try {
+    soundUrl = new URL("./assets/sound.mp3", import.meta.url).href;
+  } catch (e) {
+    soundUrl = "";
+  }
+}
+
+(function () {
+  if (typeof document === "undefined") return;
+
+  const id = "lycaxia-notification-css";
+
+  if (!document.getElementById(id)) {
+    const link = document.createElement("link");
+
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = new URL("./style.css", import.meta.url).href;
+
+    document.head.appendChild(link);
+  }
+})();
+
+let isSoundAllowed = false;
+let notificationAudio = null;
+
+function setSoundNotification(status) {
+  if (typeof status === "string") {
+    const val = status.toLowerCase();
+
+    isSoundAllowed =
+      val === "allow" ||
+      val === "on" ||
+      val === "enable";
+  } else {
+    isSoundAllowed = Boolean(status);
+  }
+}
+
+function playNotificationSound() {
+  if (!isBrowser || !isSoundAllowed) return;
+
+  if (!notificationAudio && soundUrl) {
+    notificationAudio = new Audio(soundUrl);
+    notificationAudio.preload = "auto";
+  }
+
+  if (notificationAudio) {
+    notificationAudio.currentTime = 0;
+    notificationAudio.play().catch(() => {});
+  }
+}
+
+const listBahasa = {
+  id: {
+    title_info: "Pesan",
+    subtitle_info: "Dari ",
+    title_confirm: "Konfirmasi",
+    subtitle_confirm: "Konfirmasi",
+    default_confirm: "Apakah anda yakin ingin melanjutkan?",
+    cancel: "Batal",
+    continue: "Lanjutkan",
+    ok: "OK",
+    prompt_title: "Formulir",
+    prompt_subtitle: "Isi Formulir Berikut",
+    send: "Kirim"
+  },
+
+  en: {
+    title_info: "Popup",
+    subtitle_info: "From",
+    title_confirm: "Confirmation",
+    subtitle_confirm: "Confirmation",
+    default_confirm: "Are you sure you want to continue?",
+    cancel: "Cancel",
+    continue: "Continue",
+    ok: "OK",
+    prompt_title: "Form",
+    prompt_subtitle: "Fill Out This Form",
+    send: "Send"
+  }
+};
+
+let lang = listBahasa.en;
+
+function setBahasa(langs) {
+  if (listBahasa[langs]) {
+    lang = listBahasa[langs];
+  }
+}
+
+function createBaseModal(
+  headerSubtitle,
+  headerTitle,
+  popupText,
+  closeCallback,
+  headerMess,
+  type = "close"
+) {
+  playNotificationSound();
+
+  const overlay = document.createElement("div");
+  overlay.className = "popup-sistem-overlay";
+
+  const box = document.createElement("div");
+  box.className = "popup-sistem-boxinfo";
+
+  const hr = document.createElement("div");
+  hr.className = "line";
+
+  const content = document.createElement("div");
+  content.className = "popup-sistem-content";
+
+  const p = document.createElement("p");
+  p.className = "popup-sistem-popup";
+  p.innerHTML = (popupText || "").replace(/\n/g, "<br/>");
+
+  const btnContainer = document.createElement("div");
+  btnContainer.className = "container-button";
+
+  const header = document.createElement("div");
+  header.className = "popup-sistem-header";
+
+  const headerText = document.createElement("div");
+  headerText.className = "popup-sistem-header-text";
+
+  const subtitle = document.createElement("div");
+  subtitle.className = "popup-sistem-subtitle";
+  subtitle.textContent = headerSubtitle || "";
+
+  const title = document.createElement("h1");
+  title.className = "popup-sistem-title";
+  title.textContent = headerTitle || "";
+
+  headerText.append(subtitle, title);
+
+  let closed = false;
+
+  const close = () => {
+    if (closed) return;
+
+    closed = true;
+
+    if (overlay.parentNode) {
+      overlay.remove();
+    }
+
+    if (!document.querySelector(".popup-sistem-overlay")) {
+      document.body.classList.remove("no-scroll");
+    }
+
+    if (closeCallback) {
+      closeCallback();
+    }
+  };
+
+  const about = () => {
+    showPopupSistemToast({
+      Title: headerMess || headerTitle || lang.title_confirm,
+      Mess: lang.any_info,
+      Status: "default"
+    });
+  };
+
+  const btn = document.createElement("div");
+  btn.className = "popup-sistem-custom-button";
+
+  let insideButton;
+
+  if (type === "any") {
+    insideButton = `
+      <svg viewBox="0 0 24 24" class="icon-popup-sistem-custom-button">
+        <path d="M12 10h-1a1 1 0 0 0 0 2h1v6a1 1 0 0 0 2 0v-6a2 2 0 0 0-2-2Z"/>
+        <circle cx="12" cy="6.5" r="1.5"/>
+      </svg>
+    `;
+
+    btn.onclick = about;
+  } else {
+    insideButton = `
+      <svg viewBox="0 0 24 24" class="icon-popup-sistem-custom-button">
+        <path d="m19 6.41-1.41-1.41L12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+      </svg>
+    `;
+
+    btn.onclick = close;
+  }
+
+  btn.innerHTML = `
+    <svg class="indicator" viewBox="0 0 100 100">
+      <circle class="indicator-bg" cx="50" cy="50" r="44"/>
+      <circle
+        class="indicator-progress"
+        id="progress"
+        cx="50"
+        cy="50"
+        r="44"
+      />
+    </svg>
+
+    <div class="indicator-text">${insideButton}</div>
+  `;
+
+  const progress = btn.querySelector("#progress");
+
+  const radius = 44;
+  const circumference = 2 * Math.PI * radius;
+
+  progress.style.strokeDasharray = circumference;
+
+  function updateProgress() {
+    const maxScroll =
+      content.scrollHeight - content.clientHeight;
+
+    if (maxScroll <= 0) {
+      progress.style.strokeDashoffset = 0;
+    } else {
+      const percent = content.scrollTop / maxScroll;
+
+      progress.style.strokeDashoffset =
+        circumference * (1 - percent);
+    }
+  }
+
+  content.addEventListener("scroll", updateProgress);
+
+  requestAnimationFrame(updateProgress);
+
+  header.append(headerText, btn);
+
+  document.body.classList.add("no-scroll");
+
+  return {
+    overlay,
+    box,
+    hr,
+    content,
+    p,
+    btnContainer,
+    close,
+    header,
+
+    get closed() {
+      return closed;
+    }
+  };
+}
+
+function showPopupSistemInfo({
+  Subtitle =
+    lang.subtitle_info +
+    (isBrowser ? ` ${location.hostname}` : ""),
+
+  Title = lang.title_info,
+  Mess
+} = {}) {
+  if (!isBrowser) return;
+
+  const modal = createBaseModal(
+    Subtitle,
+    Title,
+    Mess,
+    null,
+    Title,
+    "close"
+  );
+
+  modal.content.append(
+    modal.p,
+    modal.btnContainer
+  );
+
+  modal.box.append(
+    modal.header,
+    modal.hr,
+    modal.content
+  );
+
+  modal.overlay.appendChild(modal.box);
+
+  document.body.appendChild(modal.overlay);
+}
+
+function showPopupSistemConfirm({
+  Subtitle =
+    lang.subtitle_info +
+    (isBrowser ? ` ${location.hostname}` : ""),
+
+  Mess,
+  Type,
+  Event
+} = {}) {
+  if (!isBrowser) return;
+
+  const text =
+    Mess === "default"
+      ? lang.default_confirm
+      : Mess;
+
+  const modal = createBaseModal(
+    lang.subtitle_confirm,
+    lang.title_confirm,
+    text,
+    null,
+    lang.title_confirm,
+    "any"
+  );
+
+  const btnNo = document.createElement("button");
+
+  btnNo.type = "button";
+  btnNo.textContent = lang.cancel;
+  btnNo.onclick = modal.close;
+
+  const btnYes = document.createElement("button");
+
+  btnYes.type = "button";
+  btnYes.textContent = lang.continue;
+
+  btnYes.onclick = () => {
+    modal.close();
+
+    if (Event) {
+      if (typeof Event === "function") {
+        Event();
+      } else if (typeof Event === "string") {
+        location.href = Event;
+      }
+    }
+  };
+
+  modal.btnContainer.append(
+    btnNo,
+    btnYes
+  );
+
+  modal.content.append(
+    modal.p,
+    modal.btnContainer
+  );
+
+  modal.box.append(
+    modal.header,
+    modal.hr,
+    modal.content
+  );
+
+  modal.overlay.appendChild(modal.box);
+
+  document.body.appendChild(modal.overlay);
+}
+
+function showPopupSistemPrompt({
+  Mess,
+  Type = "text"
+} = {}) {
+  return new Promise((resolve, reject) => {
+    if (!isBrowser) {
+      reject("Bukan di lingkungan browser");
+      return;
+    }
+
+    let submitted = false;
+
+    const modal = createBaseModal(
+      lang.prompt_subtitle,
+      lang.prompt_title,
+      Mess,
+
+      () => {
+        if (!submitted) {
+          reject("Dibatalkan");
+        }
+      },
+
+      lang.prompt_title,
+      "any"
+    );
+
+    const input = document.createElement("input");
+
+    input.className = "popup-sistem-input";
+
+    const validTypes = [
+      "text",
+      "number",
+      "email",
+      "url",
+      "date",
+      "time",
+      "tel",
+      "range",
+      "password"
+    ];
+
+    const finalType =
+      Type === "num"
+        ? "number"
+        : Type;
+
+    input.type =
+      validTypes.includes(finalType)
+        ? finalType
+        : "text";
+
+    const btnNo = document.createElement("button");
+
+    btnNo.type = "button";
+    btnNo.textContent = lang.cancel;
+    btnNo.onclick = modal.close;
+
+    const btnYes = document.createElement("button");
+
+    btnYes.type = "button";
+    btnYes.textContent = lang.send;
+
+    btnYes.onclick = () => {
+      const val = input.value;
+
+      submitted = true;
+
+      modal.close();
+
+      resolve(val);
+    };
+
+    modal.btnContainer.append(
+      btnNo,
+      btnYes
+    );
+
+    modal.content.append(
+      modal.p,
+      input,
+      modal.btnContainer
+    );
+
+    modal.box.append(
+      modal.header,
+      modal.hr,
+      modal.content
+    );
+
+    modal.overlay.appendChild(modal.box);
+
+    document.body.appendChild(modal.overlay);
+
+    setTimeout(() => {
+      input.focus();
+    }, 50);
+  });
+}
+
+// Clean Base
+function createBaseModalClean(
+  contentPopup,
+  popupText,
+  closeCallback
+) {
+  playNotificationSound();
+
+  const overlay = document.createElement("div");
+  overlay.className = "popup-sistem-overlay-clean";
+
+  const box = document.createElement("div");
+  box.className = "popup-sistem-boxinfo-clean";
+
+  const content = document.createElement("div");
+  content.className = "popup-sistem-content-clean";
+  content.innerHTML = contentPopup || "";
+
+  const p = document.createElement("p");
+  p.className = "popup-sistem-popup-clean";
+  p.innerHTML = (popupText || "").replace(/\n/g, "<br/>");
+
+  const image = document.createElement("img");
+  image.className = "popup-sistem-popup-clean";
+
+  const btn = document.createElement("div");
+  btn.className = "popup-sistem-custom-button-clean";
+
+  btn.innerHTML = `
+    <svg
+      viewBox="0 0 24 24"
+      class="icon-popup-sistem-custom-button-clean"
+    >
+      <path d="m19 6.41-1.41-1.41L12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    </svg>
+  `;
+
+  let closed = false;
+
+  const close = () => {
+    if (closed) return;
+
+    closed = true;
+
+    if (overlay.parentNode) {
+      overlay.remove();
+    }
+
+    if (!document.querySelector(".popup-sistem-overlay-clean")) {
+      document.body.classList.remove("no-scroll");
+    }
+
+    if (closeCallback) {
+      closeCallback();
+    }
+  };
+
+  overlay.onclick = close;
+  content.onclick = (event) => event.stopPropagation();
+
+  content.append(p);
+  box.append(btn, content);
+  overlay.appendChild(box);
+
+  document.body.classList.add("no-scroll");
+
+  return {
+    overlay,
+    box,
+    content,
+    image,
+    p,
+    close,
+    btn,
+
+    get closed() {
+      return closed;
+    }
+  };
+}
+
+function initPopupImages() {
+  if (!isBrowser) return;
+
+  const images = document.querySelectorAll(
+    'img[onclick*="lyp.viewImg"]'
+  );
+
+  images.forEach((img) => {
+    img.style.cursor = "zoom-in";
+  });
+}
+
+function viewPopupImage(el) {
+  const image = document.createElement("img");
+  image.src = el.src;
+  image.alt = el.alt || "";
+
+  const p = document.createElement("p");
+  p.innerHTML = (el.alt || "").replace(/\n/g, "<br/>");
+
+  const modal = createBaseModalClean("");
+
+  modal.image.src = el.src;
+  modal.image.alt = el.alt || "";
+
+  modal.p.innerHTML = (el.alt || "").replace(/\n/g, "<br/>");
+
+  modal.content.innerHTML = "";
+  modal.content.append(
+    modal.image,
+    modal.p
+  );
+
+  document.body.appendChild(modal.overlay);
+}
+
+const lypReal = {
+  info: showPopupSistemInfo,
+  confirm: showPopupSistemConfirm,
+  prompt: showPopupSistemPrompt,
+  viewImg: viewPopupImage,
+  setLang: setBahasa,
+  sound: setSoundNotification
+};
+
+const noop = () => {};
+
+const noopPromise = () =>
+  Promise.resolve("");
+
+const lypDummy = {
+  info: noop,
+  confirm: noop,
+  prompt: noopPromise,
+  viewImg: noop,
+  setLang: noop,
+  sound: noop
+};
+
+const lyp = isBrowser
+  ? lypReal
+  : lypDummy;
+
+if (isBrowser) {
+  window.lyp = lypReal;
+  initPopupImages();
+}
+
+export default lyp;
