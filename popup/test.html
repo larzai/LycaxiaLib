@@ -5,19 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demo Popup System</title>
   </head>
-  <body>
-    <img src="https://cdn.pixabay.com/photo/2026/09/04/17/57/17-57-43-356_1280.jpg" alt="Foto Pemandangan" width="400" onclick="lyp.viewImg(this)" />
+  <body class="lypDark0">
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+    </style>
+
+    <img src="https://cdn.pixabay.com/photo/2026/09/04/17/57/17-57-43-356_1280.jpg" alt="Foto Pemandangan" height="400" onclick="lyp.viewImg(this)" />
     
     <button onclick="testInfo()">lyp.info({})</button>
     <button onclick="testConfirmDef()">lyp.confirm({ default })</button>
+    <button onclick="testConfirmDelete()">lyp.confirm({ delete })</button>
+    <button onclick="testConfirmDouble()">lyp.confirm({ double })</button>
+    <button onclick="testConfirmCut()">lyp.confirm({ cut })</button>
+    <button onclick="testConfirmDelete()">lyp.form</button>
+    <button onclick="testCopy()">lyp.copy</button>
     
     <script src="./script.js"></script>
     <script>
-      lyp.sound("allow");
+      lyp.sound("disallow");
+      lyp.styles("glass");
+
+      const x = `Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Ketuk pada klip untuk menempelnya pada kotak teks.Gunakan ikon edit untuk menyematkan, menambahkan, atau menghapus klip.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Gunakan ikon edit untuk menyematkan, menambahkan, atau menghapus klip.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Ketuk pada klip untuk menempelnya pada kotak teks.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Gunakan ikon edit untuk menyematkan.
+      
+      
+      menambahkan, atau menghapus klip.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Ketuk pada klip untuk menempelnya pada kotak teks.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Gunakan ikon edit untuk menyematkan, menambahkan, atau menghapus klip.Ketuk pada klip untuk menempelnya pada kotak teks.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Gunakan ikon edit untuk menyematkan, menambahkan, atau menghapus klip.Ketuk pada klip untuk menempelnya pada kotak teks.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Ketuk pada klip untuk menempelnya pada kotak teks.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Sentuh lama klip untuk menyematkannya.
+
+      <a>Klik Here!</a>
+      
+      Klip yang dilepas sematannya akan dihapus setelah 1 jam.Ketuk pada klip untuk menempelnya pada kotak teks.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Gunakan ikon edit untuk menyematkan, menambahkan, atau menghapus klip.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Sentuh lama klip untuk menyematkannya. Klip yang dilepas sematannya akan dihapus setelah 1 jam.Selamat datang di papan klip Gboard, teks apa pun yang Anda salin akan disimpan di sini.Gunakan ikon edit untuk menyematkan, menambahkan, atau menghapus klip.Ketuk pada klip untuk menempelnya pada kotak teks.`
 
       function testInfo() {
         lyp.info({
-          Mess: "a"
+          Mess: x + x + "<img src='https://cdn.pixabay.com/photo/2026/09/04/17/57/17-57-43-356_1280.jpg' />" + x + x
         });
       }
 
@@ -37,7 +58,53 @@
           Title: "Title",
           Mess: "Apakah anda yakin ingin melanjutkan tindakan ini?",
           Type: "delete",
+          PinConfirm: "HapusIni",
           Event: function() { testInfo(); }
+        });
+      }
+      
+      function testConfirmDouble() {
+        lyp.confirm({
+          Subtitle: "Subtitle",
+          Title: "Title",
+          Mess: "Apakah anda yakin ingin melanjutkan tindakan ini?",
+          Type: "double",
+          LastMess: "Apakah anda benar-benar yakin ingin melanjutkan?",
+          Event: function() { testInfo(); }
+        });
+      }
+      
+      function testConfirmCut() {
+        lyp.confirm({
+          Subtitle: "Subtitle",
+          Title: "Title",
+          Mess: "Apakah anda yakin ingin melanjutkan tindakan ini?",
+          Type: "cut",
+          Event: function() { testInfo(); }
+        });
+      }
+      
+      async function testForm() {
+        lyp.prompt({
+          Subtitle: "Subtitle",
+          Title: "Title",
+          Mess: "Apakah anda yakin ingin melanjutkan tindakan ini?",
+          Type: "num",
+          Require: true,
+          RequireValue: "67",
+          Event: function() { testInfo(); }
+        });
+      }
+      
+      function testCopy() {
+        lyp.copy({
+          Subtitle: "Subtitle",
+          Title: "Title",
+          Mess: "Apakah anda yakin ingin melanjutkan tindakan ini?",
+          Label1: "Link website:",
+          Value1: " !important",
+          Label2: "Kode kunci:",
+          Value2: "61762827187"
         });
       }
     </script>
